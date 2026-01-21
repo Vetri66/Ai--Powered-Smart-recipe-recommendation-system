@@ -1,0 +1,112 @@
+{
+  "name": "Daily Meal Plan Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Daily 7AM Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://zwtkkgywznvfbejhbclv.supabase.co/rest/v1/user_preferences",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "httpHeaderAuth": {
+          "name": "Authorization",
+          "value": "Bearer YOUR_SUPABASE_SERVICE_KEY"
+        },
+        "options": {
+          "headers": {
+            "apikey": "YOUR_SUPABASE_ANON_KEY"
+          }
+        }
+      },
+      "name": "Get Active Users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://your-app.vercel.app/api/n8n/user-automation",
+        "method": "POST",
+        "body": {
+          "type": "daily_meal_plan",
+          "userId": "={{ $json.user_id }}",
+          "data": {
+            "dietary_preferences": "={{ $json.dietary_preferences }}",
+            "health_goals": "={{ $json.health_goals }}",
+            "allergies": "={{ $json.allergies }}"
+          }
+        },
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      "name": "Generate Meal Plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourapp.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "🍳 Your Daily Meal Plan is Ready!",
+        "html": "Good Morning! Your personalized meal plan: {{ $json.mealPlan }}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Daily 7AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Active Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Users": {
+      "main": [
+        [
+          {
+            "node": "Generate Meal Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Meal Plan": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

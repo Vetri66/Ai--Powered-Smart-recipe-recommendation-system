@@ -1,0 +1,34 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Chef Hat -->
+  <ellipse cx="100" cy="80" rx="45" ry="15" fill="#f8f9fa"/>
+  <rect x="55" y="65" width="90" height="40" rx="45" fill="#ffffff"/>
+  <circle cx="75" cy="50" r="8" fill="#ffffff"/>
+  <circle cx="100" cy="45" r="10" fill="#ffffff"/>
+  <circle cx="125" cy="50" r="8" fill="#ffffff"/>
+  
+  <!-- Face -->
+  <circle cx="100" cy="120" r="35" fill="#ffeaa7"/>
+  
+  <!-- Eyes -->
+  <circle cx="90" cy="115" r="3" fill="#2d3436"/>
+  <circle cx="110" cy="115" r="3" fill="#2d3436"/>
+  
+  <!-- Smile -->
+  <path d="M 85 125 Q 100 135 115 125" stroke="#2d3436" stroke-width="2" fill="none"/>
+  
+  <!-- Body -->
+  <rect x="70" y="150" width="60" height="40" rx="10" fill="#00b894"/>
+  
+  <!-- Cooking Utensils -->
+  <rect x="45" y="140" width="3" height="25" fill="#636e72"/>
+  <circle cx="46.5" cy="135" r="5" fill="#fd79a8"/>
+  
+  <rect x="152" y="140" width="3" height="25" fill="#636e72"/>
+  <rect x="148" y="132" width="11" height="8" rx="2" fill="#74b9ff"/>
+  
+  <!-- Sparkles -->
+  <circle cx="60" cy="90" r="2" fill="#fdcb6e"/>
+  <circle cx="140" cy="95" r="2" fill="#fdcb6e"/>
+  <circle cx="130" cy="75" r="1.5" fill="#e17055"/>
+  <circle cx="70" cy="70" r="1.5" fill="#e17055"/>
+</svg>
