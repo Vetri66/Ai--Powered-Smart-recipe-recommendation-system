@@ -78,7 +78,7 @@ Privacy-aware data handling
 
 ⚙️ Installation & Setup
 Step 1: Clone the Repository
-git clone https://github.com/your-username/smart-recipe-system.git
+git clone https://github.com/Vetri66/Ai--Powered-Smart-recipe-recommendation-system.git
 cd smart-recipe-system
 
 Step 2: Install Dependencies
@@ -112,3 +112,4 @@ npm run dev
 
 ## Author
 Vetriselvan M
+
