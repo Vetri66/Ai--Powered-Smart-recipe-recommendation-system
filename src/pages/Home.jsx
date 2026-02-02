@@ -11,7 +11,7 @@ import SearchBar from "../components/SearchBar"
 import FilterPanel from "../components/FilterPanel"
 
 const Home = () => {
-  const { searchQuery, selectedCategory, selectedDifficulty } = useRecipe()
+  const { searchQuery = "", selectedCategory = "all", selectedDifficulty = "all" } = useRecipe() || {}
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
 
@@ -124,6 +124,13 @@ const Home = () => {
       </AnimatePresence>
     </div>
   )
+}
+
+// Prevent static generation
+export async function getServerSideProps() {
+  return {
+    props: {},
+  }
 }
 
 export default Home
