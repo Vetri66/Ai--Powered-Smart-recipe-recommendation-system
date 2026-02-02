@@ -1,12 +1,18 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 export async function POST(req) {
   try {
     const { calories, diet, restrictions, pantry, days = 7 } = await req.json()
+
+    // Only initialize OpenAI if API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      console.warn('OpenAI API key not found, using fallback meal plan')
+      return getFallbackMealPlan(days)
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
 
     const prompt = `Create a ${days}-day meal plan with the following constraints:
 - Daily target calories: ${calories || "2000"}
@@ -50,36 +56,39 @@ Return ONLY a valid JSON object with this exact structure:
       const json = JSON.parse(text)
       return Response.json(json)
     } catch (parseError) {
-      // Fallback meal plan
-      const fallbackPlan = {
-        days: Array.from({ length: days }, (_, i) => ({
-          day: i + 1,
-          breakfast: {
-            title: "Healthy Breakfast",
-            ingredients: ["oats", "milk", "banana"],
-            instructions: ["Mix oats with milk", "Add sliced banana", "Serve warm"],
-            image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzEwYjk4MSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+MhyBCcmVha2Zhc3Q8L3RleHQ+PC9zdmc+"
-          },
-          lunch: {
-            title: "Simple Lunch",
-            ingredients: ["bread", "cheese", "tomato"],
-            instructions: ["Toast bread", "Add cheese and tomato", "Serve fresh"],
-            image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzEwYjk4MSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+llyBMdW5jaDwvdGV4dD48L3N2Zz4="
-          },
-          dinner: {
-            title: "Easy Dinner",
-            ingredients: ["rice", "chicken", "vegetables"],
-            instructions: ["Cook rice", "Grill chicken", "Steam vegetables", "Serve together"],
-            image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzEwYjk4MSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+NvSBEaW5uZXI8L3RleHQ+PC9zdmc+"
-          },
-          snacks: ["apple", "nuts"]
-        })),
-        shoppingList: ["oats", "milk", "banana", "bread", "cheese", "tomato", "rice", "chicken", "vegetables", "apple", "nuts"]
-      }
-      return Response.json(fallbackPlan)
+      return getFallbackMealPlan(days)
     }
   } catch (error) {
     console.error('Meal plan API error:', error)
-    return Response.json({ error: 'Failed to generate meal plan' }, { status: 500 })
+    return getFallbackMealPlan(days)
   }
+}
+
+function getFallbackMealPlan(days) {
+  const fallbackPlan = {
+    days: Array.from({ length: days }, (_, i) => ({
+      day: i + 1,
+      breakfast: {
+        title: "Healthy Breakfast",
+        ingredients: ["oats", "milk", "banana"],
+        instructions: ["Mix oats with milk", "Add sliced banana", "Serve warm"],
+        image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzEwYjk4MSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+MhyBCcmVha2Zhc3Q8L3RleHQ+PC9zdmc+"
+      },
+      lunch: {
+        title: "Simple Lunch",
+        ingredients: ["bread", "cheese", "tomato"],
+        instructions: ["Toast bread", "Add cheese and tomato", "Serve fresh"],
+        image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzEwYjk4MSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+llyBMdW5jaDwvdGV4dD48L3N2Zz4="
+      },
+      dinner: {
+        title: "Easy Dinner",
+        ingredients: ["rice", "chicken", "vegetables"],
+        instructions: ["Cook rice", "Grill chicken", "Steam vegetables", "Serve together"],
+        image: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzEwYjk4MSIvPjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+8J+NvSBEaW5uZXI8L3RleHQ+PC9zdmc+"
+      },
+      snacks: ["apple", "nuts"]
+    })),
+    shoppingList: ["oats", "milk", "banana", "bread", "cheese", "tomato", "rice", "chicken", "vegetables", "apple", "nuts"]
+  }
+  return Response.json(fallbackPlan)
 }
