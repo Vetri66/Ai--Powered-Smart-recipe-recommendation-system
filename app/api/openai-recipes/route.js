@@ -1,12 +1,6 @@
 import OpenAI from 'openai'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-
 function validateIngredients(ingredients) {
   const nonFoodItems = ['soap', 'detergent', 'shampoo', 'toothpaste', 'medicine', 'cleaning', 'chemical', 'poison', 'bleach', 'plastic', 'metal', 'glass', 'paper']
   const validIngredients = []
@@ -46,14 +40,6 @@ function validateIngredients(ingredients) {
 
 export async function POST(req) {
   try {
-    // Check if API key is available
-    if (!process.env.OPENAI_API_KEY) {
-      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
-
     const { ingredients, preferences = '', dietaryRestrictions = [] } = await req.json()
     
     if (!ingredients || ingredients.length === 0) {
@@ -64,8 +50,7 @@ export async function POST(req) {
     }
 
     console.log('Generating recipe with ingredients:', ingredients)
-    console.log('Validation result:', validateIngredients(ingredients))
-
+    
     // Validate ingredients first
     const validationResult = validateIngredients(ingredients)
     if (!validationResult.isValid) {
@@ -80,6 +65,16 @@ export async function POST(req) {
         headers: { 'Content-Type': 'application/json' }
       })
     }
+
+    // Check if OpenAI API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      console.warn('OpenAI API key not configured, trying Gemini fallback')
+      return tryGeminiFallback(validationResult.validIngredients, preferences, dietaryRestrictions)
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
 
     const prompt = `You are a professional chef. Create a delicious and safe recipe using ONLY these ingredients: ${validationResult.validIngredients.join(', ')}.
     
@@ -161,7 +156,7 @@ export async function POST(req) {
         cookingTime: 30,
         servings: 4,
         difficulty: "Medium",
-        ingredients: ingredients.map(ing => ({
+        ingredients: validationResult.validIngredients.map(ing => ({
           name: ing,
           amount: "As needed",
           optional: false
@@ -192,116 +187,121 @@ export async function POST(req) {
     console.error('OpenAI API Error:', error)
     
     // Try Gemini AI as fallback
-    try {
-      console.log('Trying Gemini AI as fallback...')
-      const { ingredients, preferences = '', dietaryRestrictions = [] } = await req.json()
-      
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
-      
-      const prompt = `Create a detailed recipe using ONLY these FOOD ingredients: ${validationResult.validIngredients.join(', ')}.
-      
-      IMPORTANT: Only use edible food ingredients. Ignore any non-food items.
-      Additional preferences: ${preferences}
-      Dietary restrictions: ${dietaryRestrictions.join(', ') || 'None'}
-      
-      Return ONLY a valid JSON object with this exact structure:
-      {
-        "name": "Recipe Name",
-        "description": "Brief description",
-        "cookingTime": 30,
-        "servings": 4,
-        "difficulty": "Easy",
-        "ingredients": [
-          {"name": "ingredient name", "amount": "1 cup", "optional": false}
-        ],
-        "instructions": [
-          "Step 1 instruction",
-          "Step 2 instruction"
-        ],
-        "nutrition": {
-          "calories": 350,
-          "protein": 20,
-          "carbs": 45,
-          "fat": 12,
-          "fiber": 8
-        },
-        "tags": ["healthy", "quick", "vegetarian"],
-        "category": "main-dish"
-      }`
-      
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const recipeText = response.text().trim()
-      
-      // Parse Gemini response
-      let recipe
-      try {
-        // Clean up the response to extract JSON
-        const jsonMatch = recipeText.match(/\{[\s\S]*\}/)
-        const cleanJson = jsonMatch ? jsonMatch[0] : recipeText
-        recipe = JSON.parse(cleanJson)
-        
-        // Add metadata
-        recipe.id = `gemini-${Date.now()}`
-        recipe.source = 'Gemini AI Generated'
-        recipe.createdAt = new Date().toISOString()
-        
-        return new Response(JSON.stringify(recipe), {
-          headers: { 'Content-Type': 'application/json' }
-        })
-        
-      } catch (parseError) {
-        console.error('Gemini JSON parsing failed:', parseError)
-        throw parseError
-      }
-      
-    } catch (geminiError) {
-      console.error('Gemini AI also failed:', geminiError)
-    }
-    
-    // Final fallback if both APIs fail
-    const { ingredients } = await req.json()
-    
-    const validIngredients = ingredients.filter(ing => 
-      !['soap', 'detergent', 'shampoo', 'toothpaste', 'medicine'].includes(ing.toLowerCase())
-    )
-    
-    const fallbackRecipe = {
-      id: `fallback-${Date.now()}`,
-      name: "Simple Recipe with Your Ingredients",
-      description: "A basic recipe using your available ingredients",
-      cookingTime: 25,
-      servings: 4,
-      difficulty: "Easy",
-      ingredients: validIngredients.map(ing => ({
-        name: ing,
-        amount: "As needed",
-        optional: false
-      })),
-      instructions: [
-        "Prepare and clean all ingredients",
-        "Heat oil in a pan over medium heat",
-        "Add ingredients and cook according to your preference",
-        "Season with salt and pepper to taste",
-        "Serve hot and enjoy!"
-      ],
-      nutrition: {
-        calories: 250,
-        protein: 12,
-        carbs: 25,
-        fat: 8,
-        fiber: 4
-      },
-      tags: ["simple", "quick"],
-      category: "main-dish",
-      source: 'Fallback Recipe',
-      createdAt: new Date().toISOString(),
-      note: 'AI services are currently unavailable. Here\'s a basic recipe to get you started!'
-    }
-    
-    return new Response(JSON.stringify(fallbackRecipe), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    const { ingredients, preferences = '', dietaryRestrictions = [] } = await req.json()
+    const validationResult = validateIngredients(ingredients)
+    return tryGeminiFallback(validationResult.validIngredients, preferences, dietaryRestrictions)
   }
+}
+
+async function tryGeminiFallback(validIngredients, preferences, dietaryRestrictions) {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('Gemini API key not configured, using static fallback')
+      return getStaticFallback(validIngredients)
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    
+    const prompt = `Create a detailed recipe using ONLY these FOOD ingredients: ${validIngredients.join(', ')}.
+    
+    IMPORTANT: Only use edible food ingredients. Ignore any non-food items.
+    Additional preferences: ${preferences}
+    Dietary restrictions: ${dietaryRestrictions.join(', ') || 'None'}
+    
+    Return ONLY a valid JSON object with this exact structure:
+    {
+      "name": "Recipe Name",
+      "description": "Brief description",
+      "cookingTime": 30,
+      "servings": 4,
+      "difficulty": "Easy",
+      "ingredients": [
+        {"name": "ingredient name", "amount": "1 cup", "optional": false}
+      ],
+      "instructions": [
+        "Step 1 instruction",
+        "Step 2 instruction"
+      ],
+      "nutrition": {
+        "calories": 350,
+        "protein": 20,
+        "carbs": 45,
+        "fat": 12,
+        "fiber": 8
+      },
+      "tags": ["healthy", "quick", "vegetarian"],
+      "category": "main-dish"
+    }`
+    
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    const recipeText = response.text().trim()
+    
+    // Parse Gemini response
+    let recipe
+    try {
+      // Clean up the response to extract JSON
+      const jsonMatch = recipeText.match(/\{[\s\S]*\}/)
+      const cleanJson = jsonMatch ? jsonMatch[0] : recipeText
+      recipe = JSON.parse(cleanJson)
+      
+      // Add metadata
+      recipe.id = `gemini-${Date.now()}`
+      recipe.source = 'Gemini AI Generated'
+      recipe.createdAt = new Date().toISOString()
+      
+      return new Response(JSON.stringify(recipe), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+    } catch (parseError) {
+      console.error('Gemini JSON parsing failed:', parseError)
+      return getStaticFallback(validIngredients)
+    }
+    
+  } catch (geminiError) {
+    console.error('Gemini AI also failed:', geminiError)
+    return getStaticFallback(validIngredients)
+  }
+}
+
+function getStaticFallback(validIngredients) {
+  const fallbackRecipe = {
+    id: `fallback-${Date.now()}`,
+    name: "Simple Recipe with Your Ingredients",
+    description: "A basic recipe using your available ingredients",
+    cookingTime: 25,
+    servings: 4,
+    difficulty: "Easy",
+    ingredients: validIngredients.map(ing => ({
+      name: ing,
+      amount: "As needed",
+      optional: false
+    })),
+    instructions: [
+      "Prepare and clean all ingredients",
+      "Heat oil in a pan over medium heat",
+      "Add ingredients and cook according to your preference",
+      "Season with salt and pepper to taste",
+      "Serve hot and enjoy!"
+    ],
+    nutrition: {
+      calories: 250,
+      protein: 12,
+      carbs: 25,
+      fat: 8,
+      fiber: 4
+    },
+    tags: ["simple", "quick"],
+    category: "main-dish",
+    source: 'Fallback Recipe',
+    createdAt: new Date().toISOString(),
+    note: 'AI services are currently unavailable. Here\'s a basic recipe to get you started!'
+  }
+  
+  return new Response(JSON.stringify(fallbackRecipe), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' }
+  })
 }
