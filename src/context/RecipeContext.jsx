@@ -79,12 +79,15 @@ const recipeReducer = (state, action) => {
       }
 
     case ACTIONS.TOGGLE_FAVORITE:
-      const isFavorite = state.favorites.some((fav) => fav.id === action.payload.id)
+      if (!action.payload || !action.payload.id) {
+        return state
+      }
+      const isFavorite = state.favorites && state.favorites.some((fav) => fav && fav.id === action.payload.id)
       return {
         ...state,
         favorites: isFavorite
-          ? state.favorites.filter((fav) => fav.id !== action.payload.id)
-          : [...state.favorites, action.payload],
+          ? state.favorites.filter((fav) => fav && fav.id !== action.payload.id)
+          : [...(state.favorites || []), action.payload],
       }
 
     case ACTIONS.SET_SEARCH_QUERY:
@@ -110,14 +113,16 @@ const recipeReducer = (state, action) => {
       Object.values(state.mealPlan)
         .flat()
         .forEach((recipe) => {
-          recipe.ingredients.forEach((ingredient) => {
-            const existing = ingredients.find((item) => item.name === ingredient.name)
-            if (existing) {
-              existing.amount = existing.amount + " + " + ingredient.amount
-            } else {
-              ingredients.push({ ...ingredient, checked: false })
-            }
-          })
+          if (recipe && recipe.ingredients && Array.isArray(recipe.ingredients)) {
+            recipe.ingredients.forEach((ingredient) => {
+              const existing = ingredients.find((item) => item.name === ingredient.name)
+              if (existing) {
+                existing.amount = existing.amount + " + " + ingredient.amount
+              } else {
+                ingredients.push({ ...ingredient, checked: false })
+              }
+            })
+          }
         })
       return {
         ...state,

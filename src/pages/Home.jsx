@@ -17,24 +17,24 @@ const Home = () => {
 
   // Filter recipes based on search query and filters
   const filteredRecipes = useMemo(() => {
-    let filtered = recipes
+    let filtered = recipes || []
 
     // Apply search query
-    if (searchQuery.trim()) {
+    if (searchQuery && searchQuery.trim()) {
       filtered = searchRecipes(searchQuery)
     }
 
     // Apply category filter
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((recipe) => recipe.category.toLowerCase() === selectedCategory.toLowerCase())
+    if (selectedCategory && selectedCategory !== "all") {
+      filtered = filtered.filter((recipe) => recipe && recipe.category && recipe.category.toLowerCase() === selectedCategory.toLowerCase())
     }
 
     // Apply difficulty filter
-    if (selectedDifficulty !== "all") {
-      filtered = filtered.filter((recipe) => recipe.difficulty.toLowerCase() === selectedDifficulty.toLowerCase())
+    if (selectedDifficulty && selectedDifficulty !== "all") {
+      filtered = filtered.filter((recipe) => recipe && recipe.difficulty && recipe.difficulty.toLowerCase() === selectedDifficulty.toLowerCase())
     }
 
-    return filtered
+    return filtered || []
   }, [searchQuery, selectedCategory, selectedDifficulty])
 
   const categories = ["all", "healthy", "asian", "italian", "seafood", "dessert", "salad"]
