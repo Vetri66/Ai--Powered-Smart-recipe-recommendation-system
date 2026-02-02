@@ -377,8 +377,8 @@ export const searchRecipes = (query) => {
     (recipe) =>
       recipe.name.toLowerCase().includes(lowercaseQuery) ||
       recipe.description.toLowerCase().includes(lowercaseQuery) ||
-      recipe.tags.some((tag) => tag.toLowerCase().includes(lowercaseQuery)) ||
-      recipe.ingredients.some((ingredient) => ingredient.name.toLowerCase().includes(lowercaseQuery)),
+      (recipe.tags && recipe.tags.some((tag) => tag.toLowerCase().includes(lowercaseQuery))) ||
+      (recipe.ingredients && recipe.ingredients.some((ingredient) => ingredient.name.toLowerCase().includes(lowercaseQuery))),
   )
 }
 
@@ -392,13 +392,14 @@ export const getRecipesByCookingTime = (maxTime) => {
 
 export const getRecipesByDietaryRestrictions = (restrictions) => {
   return recipes.filter((recipe) =>
-    restrictions.every((restriction) => recipe.dietaryRestrictions.includes(restriction)),
+    recipe.dietaryRestrictions && restrictions.every((restriction) => recipe.dietaryRestrictions.includes(restriction)),
   )
 }
 
 export const getRecipesByIngredients = (availableIngredients) => {
   return recipes
     .filter((recipe) => {
+      if (!recipe.ingredients || !Array.isArray(recipe.ingredients)) return false
       const recipeIngredients = recipe.ingredients.map((ing) => ing.name.toLowerCase())
       const matchCount = availableIngredients.filter((ingredient) =>
         recipeIngredients.some((recipeIng) => recipeIng.includes(ingredient.toLowerCase())),
@@ -407,14 +408,14 @@ export const getRecipesByIngredients = (availableIngredients) => {
     })
     .sort((a, b) => {
       // Sort by ingredient match percentage
-      const aMatch =
+      const aMatch = a.ingredients ?
         availableIngredients.filter((ingredient) =>
           a.ingredients.some((ing) => ing.name.toLowerCase().includes(ingredient.toLowerCase())),
-        ).length / a.ingredients.length
-      const bMatch =
+        ).length / a.ingredients.length : 0
+      const bMatch = b.ingredients ?
         availableIngredients.filter((ingredient) =>
           b.ingredients.some((ing) => ing.name.toLowerCase().includes(ingredient.toLowerCase())),
-        ).length / b.ingredients.length
+        ).length / b.ingredients.length : 0
       return bMatch - aMatch
     })
 }
