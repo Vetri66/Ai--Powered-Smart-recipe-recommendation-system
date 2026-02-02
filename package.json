@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "postinstall": "next telemetry disable"
   },
   "dependencies": {
     "@ai-sdk/react": "latest",
@@ -54,9 +55,9 @@
     "geist": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
-    "next": "15.2.4",
+    "next": "^15.2.5",
     "next-themes": "latest",
-    "openai": "^6.3.0",
+    "openai": "^6.17.0",
     "react": "^19",
     "react-day-picker": "latest",
     "react-dom": "^19",
@@ -66,7 +67,7 @@
     "recharts": "latest",
     "sonner": "latest",
     "swr": "latest",
-    "tailwind-merge": "^2.5.5",
+    "tailwind-merge": "^2.6.1",
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "latest",
     "vaul": "latest",

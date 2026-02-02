@@ -13,6 +13,8 @@ const nextConfig = {
     domains: ['blob.v0.app'],
     unoptimized: true,
   },
+  output: 'standalone',
+  swcMinify: true,
 }
 
 export default nextConfig
