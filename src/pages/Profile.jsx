@@ -4,7 +4,7 @@ import { User, Heart, Calendar, ShoppingCart, Settings, Award } from "lucide-rea
 import { useRecipe } from "../context/RecipeContext"
 
 const Profile = () => {
-  const { favorites, mealPlan, shoppingList } = useRecipe()
+  const { favorites = [], mealPlan = {}, shoppingList = [] } = useRecipe() || {}
 
   const getTotalMeals = () => {
     return Object.values(mealPlan).reduce((total, dayRecipes) => total + dayRecipes.length, 0)
@@ -197,6 +197,10 @@ const Profile = () => {
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps() {
+  return { props: {} }
 }
 
 export default Profile

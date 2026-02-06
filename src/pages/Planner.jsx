@@ -8,7 +8,7 @@ import MealPlanCard from "../components/MealPlanCard"
 import AddRecipeModal from "../components/AddRecipeModal"
 
 const Planner = () => {
-  const { mealPlan, removeFromMealPlan, generateShoppingList } = useRecipe()
+  const { mealPlan = {}, removeFromMealPlan, generateShoppingList } = useRecipe() || {}
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedDay, setSelectedDay] = useState(null)
 
@@ -166,6 +166,10 @@ const Planner = () => {
       </AnimatePresence>
     </div>
   )
+}
+
+export async function getServerSideProps() {
+  return { props: {} }
 }
 
 export default Planner

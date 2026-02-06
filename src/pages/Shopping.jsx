@@ -6,7 +6,7 @@ import { ShoppingCart, Check, X, Plus, Trash2, Download } from "lucide-react"
 import { useRecipe } from "../context/RecipeContext"
 
 const Shopping = () => {
-  const { shoppingList, removeFromShoppingList, addToShoppingList, clearShoppingList } = useRecipe()
+  const { shoppingList = [], removeFromShoppingList, addToShoppingList, clearShoppingList } = useRecipe() || {}
   const [checkedItems, setCheckedItems] = useState(new Set())
   const [showAddItem, setShowAddItem] = useState(false)
   const [newItem, setNewItem] = useState({ name: "", amount: "", category: "pantry" })
@@ -319,6 +319,10 @@ const Shopping = () => {
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps() {
+  return { props: {} }
 }
 
 export default Shopping
