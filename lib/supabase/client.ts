@@ -9,12 +9,8 @@ declare global {
 
 export function getBrowserSupabase() {
   if (!globalThis.__supabase_browser__) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    
-    if (!url || !anon) {
-      throw new Error('Missing Supabase environment variables')
-    }
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
     
     try {
       globalThis.__supabase_browser__ = createBrowserClient(url, anon, {
